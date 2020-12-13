@@ -3,12 +3,17 @@ from time import sleep
 
 # main window
 root = Tk()
-root.title("Purchase Page")
+root.title("Renting Page")
 
 def test():
-    print("destroy")
-    for item in listItems:
-        item.destroy()
+    updateRentTable()
+    updatePayTable()
+
+# command for returning item
+def returnItem(index):
+    rentList[index][6] = True
+    updateRentTable()
+    print("Item returned: {}".format(index))
 
 # frame for the costomer details
 customerDetail = Frame(root, highlightbackground="black", highlightthickness=1)
@@ -55,52 +60,155 @@ searchItemButton.grid(row=0, column=2, padx=5)
 rentItemButton = Button(itemDetail, text="Rent Item", width=20)
 rentItemButton.grid(row=3, column=2, padx=5)
 
-# frame for the purchased item list
-purchasedItems = Frame(root, highlightbackground="black", highlightthickness=1, height=100)
-purchasedItems.grid(row=2, column=0, padx=10, pady=10, sticky=NSEW)
+# frame for the rentd item list
+rentdItems = Frame(root, highlightbackground="black", highlightthickness=1, height=100)
+rentdItems.grid(row=2, column=0, padx=10, pady=10, sticky=NSEW)
 
 def on_configure(event):
     # update scrollregion after starting 'mainloop'
     # when all widgets are in canvas
     canvas.configure(scrollregion=canvas.bbox('all'))
 
-# --- create canvas with scrollbar ---
-
-canvas = Canvas(purchasedItems)
+canvas = Canvas(rentdItems)
 canvas.pack(side=LEFT, expand=True, fill="both")
-
-scrollbar = Scrollbar(purchasedItems, command=canvas.yview)
+scrollbar = Scrollbar(rentdItems, command=canvas.yview)
 scrollbar.pack(side=RIGHT, fill='y', expand=False)
-
 canvas.configure(yscrollcommand = scrollbar.set)
-
-# update scrollregion after starting 'mainloop'
-# when all widgets are in canvas
 canvas.bind('<Configure>', on_configure)
-
-# --- put frame in canvas ---
-
 frame = Frame(canvas)
 canvas.create_window((0,0), window=frame, anchor='nw')
 
 # crating the header of the table
 H01 = Label(frame, text="Item Code", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=0, sticky='we')
 H02 = Label(frame, text="Item Name", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=1, sticky='we')
-H03 = Label(frame, text="Purchased Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
+H03 = Label(frame, text="Rented Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
 H04 = Label(frame, text="Qty", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=3, sticky='we')
-H05 = Label(frame, text="Rate", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=4, sticky='we')
+H05 = Label(frame, text="Rate/ Day", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=4, sticky='we')
 H06 = Label(frame, text="Amount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=5, sticky='we')
+H06 = Label(frame, text="Returned", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=6, sticky='we')
 
 listItems = []
 
-for i in range(20):
-    label = Label(frame, text="***************", height=1, bg='grey10', fg='white', borderwidth=1, relief="groove")
-    #label.after(1000, label.master.destroy)
-    label.grid(row=i+1, column=0)
-    listItems.append(label)
+rentList = [
+    ['0001', '***************************************', '2020-12-12', 2, 1500, 3000, False],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
+    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
+]
+
+def updateRentTable():
+    global scrollbar
+    global listItems
+
+    # removing previous items
+    for item in listItems:
+        item.destroy()
+    
+    listItems = []
+
+    for index in range(len(rentList)):
+        for dataIndex in range(len(rentList[0])):
+            if not dataIndex == len(rentList[0])-1:
+                label = Label(frame, text=str(rentList[index][dataIndex]), height=1, bg='grey10', fg='white', borderwidth=1, relief="groove")
+                #label.after(1000, label.master.destroy)
+            else:
+                if (rentList[index][dataIndex]):
+                    label = Label(frame, height=1, bg='green', fg='white', borderwidth=1, relief="groove")
+                else:
+                    label = Label(frame, height=1, bg='red', fg='white', borderwidth=1, relief="groove") 
+                    button = Button(frame, text="Returned", command=lambda idx = index:returnItem(idx))
+                    button.grid(row=index+1, column=dataIndex+1)
+                    listItems.append(button)
+            label.grid(row=index+1, column=dataIndex, sticky='we')
+            listItems.append(label)
+
+    # destroy and create new scrol bar
+    scrollbar.destroy()
+    root.update()
+    scrollbar = Scrollbar(rentdItems, command=canvas.yview)
+    scrollbar.pack(side=RIGHT, fill='y', expand=False)
+    canvas.configure(yscrollcommand = scrollbar.set)
+    canvas.bind('<Configure>', on_configure)
+
+# frame for the payments item list
+paymentItems = Frame(root, highlightbackground="black", highlightthickness=1, height=100)
+paymentItems.grid(row=3, column=0, padx=10, pady=10, sticky=NSEW)
+
+def on_configure_pay(event):
+    # update scrollregion after starting 'mainloop'
+    # when all widgets are in canvas
+    canvas_pay.configure(scrollregion=canvas_pay.bbox('all'))
+    
+canvas_pay = Canvas(paymentItems)
+canvas_pay.pack(side=LEFT, expand=True, fill="both")
+scrollbar_pay = Scrollbar(paymentItems, command=canvas_pay.yview)
+scrollbar_pay.pack(side=RIGHT, fill='y', expand=False)
+canvas_pay.configure(yscrollcommand = scrollbar_pay.set)
+canvas_pay.bind('<Configure>', on_configure_pay)
+frame_pay = Frame(canvas_pay)
+canvas_pay.create_window((0,0), window=frame_pay, anchor='nw')
+
+# crating the header of the table
+H01 = Label(frame_pay, text="Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=0, sticky='we')
+H02 = Label(frame_pay, text="Description", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=1, sticky='we')
+H03 = Label(frame_pay, text="Ammount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
+
+listItems_pay = []
+
+paymentList = [
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+]
+
+def updatePayTable():
+    global scrollbar_pay
+    global listItems_pay
+
+    # removing previous items
+    for item in listItems_pay:
+        item.destroy()
+    
+    listItems_pay = []
+
+    for index in range(len(paymentList)):
+        for dataIndex in range(len(paymentList[0])):
+            label = Label(frame_pay, text=str(paymentList[index][dataIndex]), height=1, bg='grey10', fg='white', borderwidth=1, relief="groove")
+            #label.after(1000, label.master.destroy)
+            label.grid(row=index+1, column=dataIndex, sticky='we')
+            listItems_pay.append(label)
+
+    # destroy and create new scrol bar
+    scrollbar_pay.destroy()
+    root.update()
+    scrollbar_pay = Scrollbar(paymentItems, command=canvas_pay.yview)
+    scrollbar_pay.pack(side=RIGHT, fill='y', expand=False)
+    canvas_pay.configure(yscrollcommand = scrollbar_pay.set)
+    canvas_pay.bind('<Configure>', on_configure_pay)
 
 
 # main loop of the programme
 root.mainloop()
-
-
