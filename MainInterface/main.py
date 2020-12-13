@@ -4,6 +4,7 @@ from time import sleep
 # main window
 root = Tk()
 root.title("Renting Page")
+root.geometry("1500x700")
 
 def test():
     updateRentTable()
@@ -146,8 +147,8 @@ def updateRentTable():
     canvas.bind('<Configure>', on_configure)
 
 # frame for the payments item list
-paymentItems = Frame(root, highlightbackground="black", highlightthickness=1, height=100)
-paymentItems.grid(row=3, column=0, padx=10, pady=10, sticky=NSEW)
+paymentItems = Frame(root, highlightbackground="black", highlightthickness=1, height=100, width=500)
+paymentItems.grid(row=2, column=1, padx=10, pady=10, sticky=NSEW)
 
 def on_configure_pay(event):
     # update scrollregion after starting 'mainloop'
@@ -171,6 +172,13 @@ H03 = Label(frame_pay, text="Ammount", height=2, bg='grey', fg='white', borderwi
 listItems_pay = []
 
 paymentList = [
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
     ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
     ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
     ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
@@ -209,6 +217,26 @@ def updatePayTable():
     canvas_pay.configure(yscrollcommand = scrollbar_pay.set)
     canvas_pay.bind('<Configure>', on_configure_pay)
 
+# frame for the payment status
+paymentStat = Frame(root, highlightbackground="black", highlightthickness=1, height=100, width=500)
+paymentStat.grid(row=0, column=1, padx=10, pady=10, rowspan=2, sticky=NSEW)
 
+amountLabel_ = Label(paymentStat, text="Ammount to be recieved", font=("Courier", 44))
+amountLabel_.grid(row=0, column=0, padx=10, pady=10, columnspan=3)
+amountLabel = Label(paymentStat, text="Rs. 100000", font=("Courier", 44))
+amountLabel.grid(row=1, column=0, padx=10, pady=10, columnspan=3)
+
+labelTmp = Label(paymentStat, text="Ammount Paid ",)
+labelTmp.grid(row=2, column=0)
+amountEntry = Entry(paymentStat, width=40)
+amountEntry.grid(row=2, column=1, pady=10)
+
+payButton = Button(paymentStat, text="Make Payment", height=5, bg="green", fg="white")
+payButton.grid(row=3, column=0)
+printBillButton = Button(paymentStat, text="Print Bill", height=5, bg="grey", fg="white")
+printBillButton.grid(row=3, column=1)
+
+updatePayTable()
+updateRentTable()
 # main loop of the programme
 root.mainloop()
