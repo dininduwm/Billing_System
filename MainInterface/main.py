@@ -221,20 +221,20 @@ def updatePayTable():
 paymentStat = Frame(root, highlightbackground="black", highlightthickness=1, height=100, width=500)
 paymentStat.grid(row=0, column=1, padx=10, pady=10, rowspan=2, sticky=NSEW)
 
-amountLabel_ = Label(paymentStat, text="Ammount to be recieved", font=("Courier", 44))
+amountLabel_ = Label(paymentStat, text="Ammount to be recieved", font=("Courier", 30))
 amountLabel_.grid(row=0, column=0, padx=10, pady=10, columnspan=3)
 amountLabel = Label(paymentStat, text="Rs. 100000", font=("Courier", 44))
 amountLabel.grid(row=1, column=0, padx=10, pady=10, columnspan=3)
 
 labelTmp = Label(paymentStat, text="Ammount Paid ",)
 labelTmp.grid(row=2, column=0)
-amountEntry = Entry(paymentStat, width=40)
+amountEntry = Entry(paymentStat, width=30)
 amountEntry.grid(row=2, column=1, pady=10)
 
-payButton = Button(paymentStat, text="Make Payment", height=5, bg="green", fg="white")
-payButton.grid(row=3, column=0)
-printBillButton = Button(paymentStat, text="Print Bill", height=5, bg="grey", fg="white")
-printBillButton.grid(row=3, column=1)
+payButton = Button(paymentStat, text="Make Payment", height=3, bg="green", fg="white")
+payButton.grid(row=3, column=0, sticky=EW, padx=10)
+printBillButton = Button(paymentStat, text="Print Bill", height=3, bg="grey", fg="white")
+printBillButton.grid(row=4, column=0, sticky=EW, padx=10, pady=5)
 
 updatePayTable()
 updateRentTable()
