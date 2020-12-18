@@ -1,5 +1,7 @@
 from tkinter import *
 from time import sleep
+from fetchData import *
+from datetime import date
 
 # main window
 root = Tk()
@@ -10,9 +12,55 @@ def test():
     updateRentTable()
     updatePayTable()
 
+def createCustomerButton():
+    nic = nicEntry.get()
+    name = nameEntry.get()
+    tp = tpEntry.get()
+    # saving data
+    createCustomer(nic, name, tp)
+
+def searchCustomerButton():
+    nic = nicEntry.get()
+    data = getCustomer(nic)
+    if data:
+        nameEntry.insert(0, data['name'])
+        tpEntry.insert(0, data['tp'])
+
+def calculateCost():
+    ammount = 0
+    for item in rentList:
+        if item[8]:
+            returnedDate = date.fromisoformat(item[7])
+        else:
+            returnedDate = date.today()
+        rentedDate = date.fromisoformat(item[2])
+        days = (returnedDate-rentedDate).total_seconds()/(3600*24)
+        days = max(1, days)
+        # calculating the cost
+        item[6] = '{:20,.2f}'.format(float(item[4])*float(item[5])*days)
+
+# calculate tehe ammount to be recieved
+def calculateAmmountRec():
+    tot = 0
+    for item in rentList:
+        try:
+            tot += float(item[6].replace(',', ''))
+        except:
+            pass
+
+    for item in paymentList:
+        try:
+            tot -= float(item[2].replace(',', ''))
+        except:
+            pass
+    
+    print("Total = ", tot)
+    amountLabel.configure(text='Rs. {:10,.2f}'.format(tot))
+
 # command for returning item
 def returnItem(index):
-    rentList[index][6] = True
+    rentList[index][8] = True
+    rentList[index][7] = date.today().isoformat()
     updateRentTable()
     print("Item returned: {}".format(index))
 
@@ -29,11 +77,11 @@ tpLabel.grid(row=2, column=0, sticky=W)
 
 nicEntry = Entry(customerDetail, width=60)
 nicEntry.grid(row=0, column=1, pady=10)
-searchButton = Button(customerDetail, text="Search Customer", width=20)
+searchButton = Button(customerDetail, text="Search Customer", width=20, command=searchCustomerButton)
 searchButton.grid(row=0, column=2, padx=5)
-nameEntry = Entry(customerDetail, width=60)
+nameEntry = Entry(customerDetail, width=80)
 nameEntry.grid(row=1, column=1, pady=10)
-addButton = Button(customerDetail, text="Add Customer", width=20, command=test)
+addButton = Button(customerDetail, text="Add Customer", width=20, command=createCustomerButton)
 addButton.grid(row=1, column=2, padx=5)
 tpEntry = Entry(customerDetail, width=40)
 tpEntry.grid(row=2, column=1, sticky=W, pady=5)
@@ -82,37 +130,28 @@ canvas.create_window((0,0), window=frame, anchor='nw')
 # crating the header of the table
 H01 = Label(frame, text="Item Code", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=0, sticky='we')
 H02 = Label(frame, text="Item Name", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=1, sticky='we')
-H03 = Label(frame, text="Rented Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
-H04 = Label(frame, text="Qty", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=3, sticky='we')
-H05 = Label(frame, text="Rate/ Day", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=4, sticky='we')
-H06 = Label(frame, text="Amount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=5, sticky='we')
-H06 = Label(frame, text="Returned", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=6, sticky='we')
+H03 = Label(frame, text="Bill No", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
+H04 = Label(frame, text="Rented Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=3, sticky='we')
+H05 = Label(frame, text="Qty", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=4, sticky='we')
+H06 = Label(frame, text="Rate/ Day", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=5, sticky='we')
+H07 = Label(frame, text="Amount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=6, sticky='we')
+H08 = Label(frame, text="Returned Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=7, sticky='we')
+H09 = Label(frame, text="Returned", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=8, sticky='we')
 
 listItems = []
 
 rentList = [
-    ['0001', '***************************************', '2020-12-12', 2, 1500, 3000, False],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, True],
-    ['0001', 'poker', '2020-12-12', 2, 1500, 3000, False],
+    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
+    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
+    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
+    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
+    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 3000, '2020-12-13', True],
 ]
 
 def updateRentTable():
+     # calculating the calculate cost
+    calculateCost()
+    
     global scrollbar
     global listItems
 
@@ -137,14 +176,19 @@ def updateRentTable():
                     listItems.append(button)
             label.grid(row=index+1, column=dataIndex, sticky='we')
             listItems.append(label)
+    try:
+        # destroy and create new scrol bar
+        scrollbar.destroy()
+        root.update()
+        scrollbar = Scrollbar(rentdItems, command=canvas.yview)
+        scrollbar.pack(side=RIGHT, fill='y', expand=False)
+        canvas.configure(yscrollcommand = scrollbar.set)
+        canvas.bind('<Configure>', on_configure)   
+    except:
+        pass
 
-    # destroy and create new scrol bar
-    scrollbar.destroy()
-    root.update()
-    scrollbar = Scrollbar(rentdItems, command=canvas.yview)
-    scrollbar.pack(side=RIGHT, fill='y', expand=False)
-    canvas.configure(yscrollcommand = scrollbar.set)
-    canvas.bind('<Configure>', on_configure)
+    # calculate the ammount ot be recieved
+    calculateAmmountRec()
 
 # frame for the payments item list
 paymentItems = Frame(root, highlightbackground="black", highlightthickness=1, height=100, width=500)
@@ -172,24 +216,11 @@ H03 = Label(frame_pay, text="Ammount", height=2, bg='grey', fg='white', borderwi
 listItems_pay = []
 
 paymentList = [
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
 ]
 
 def updatePayTable():
@@ -209,13 +240,19 @@ def updatePayTable():
             label.grid(row=index+1, column=dataIndex, sticky='we')
             listItems_pay.append(label)
 
-    # destroy and create new scrol bar
-    scrollbar_pay.destroy()
-    root.update()
-    scrollbar_pay = Scrollbar(paymentItems, command=canvas_pay.yview)
-    scrollbar_pay.pack(side=RIGHT, fill='y', expand=False)
-    canvas_pay.configure(yscrollcommand = scrollbar_pay.set)
-    canvas_pay.bind('<Configure>', on_configure_pay)
+    try:
+        # destroy and create new scrol bar
+        scrollbar_pay.destroy()
+        root.update()
+        scrollbar_pay = Scrollbar(paymentItems, command=canvas_pay.yview)
+        scrollbar_pay.pack(side=RIGHT, fill='y', expand=False)
+        canvas_pay.configure(yscrollcommand = scrollbar_pay.set)
+        canvas_pay.bind('<Configure>', on_configure_pay)
+    except:
+        pass
+
+    # calculate the ammount ot be recieved
+    calculateAmmountRec()
 
 # frame for the payment status
 paymentStat = Frame(root, highlightbackground="black", highlightthickness=1, height=100, width=500)
