@@ -1,8 +1,13 @@
 from tkinter import *
-from tkinter import simpledialog
+from tkinter import simpledialog, messagebox
 from time import sleep
 from fetchData import *
 from datetime import date, datetime
+
+# variables to handle the preocess
+isItemLoaded = False
+itemData = None
+billNo = '0002'
 
 # main window
 root = Tk()
@@ -20,16 +25,53 @@ def searchCustomerButton():
     nic = nicEntry.get()
     data = getCustomer(nic)
     if data:
+        nameEntry.delete(0, 'end')
+        tpEntry.delete(0, 'end')
         nameEntry.insert(0, data['name'])
         tpEntry.insert(0, data['tp'])
 
 def searchEquipButton():
+    global isItemLoaded
+    global itemData
+
     code = itemCodeEntry.get()
     data = getEquipment(code)
     if data:
+        # setting the variables
+        isItemLoaded = True
+        itemData = data
+        itemData['code'] = code
+
         itemRateLabel.configure(text='Item Rate                 ---> {:0,.2f}'.format(float(data['rate'])))
         itemQtyLabel.configure(text='Item Available Qty  ---> {}'.format(int(data['qty'])))
         itemDescLabel.configure(text='Item Description     ---> {}'.format(data['desc']))
+
+# renting new item button
+def rentItemButton():
+    # date format
+    format = "%Y-%m-%d %H:%M:%S"
+
+    if (isItemLoaded):
+        qty = int(itemRentQtyEntry.get())
+        if qty <= int(itemData['qty']):
+            # add new Item to the renting list
+            rentList.append([itemData['code'], itemData['desc'], datetime.now().strftime(format), billNo, qty, int(itemData['rate']), 0, 0, '', False])
+            updateRentTable()
+        else:
+            messagebox.showerror(title="Rent Page", message="Qty exceed the available qty")
+    else:
+        messagebox.showerror(title="Rent Page", message="Item not loaded")
+
+    itemRentQtyEntry.delete(0, 'end')
+
+# button to make a payment
+def makePaymentButton():
+    # date format
+    format = "%Y-%m-%d"
+    paymentList.append([datetime.now().strftime(format), descEntry.get(), int(amountEntry.get())])
+    updatePayTable()
+    descEntry.delete(0, 'end')
+    amountEntry.delete(0, 'end')
 
 def calculateCost():
     # date format
@@ -65,12 +107,12 @@ def calculateAmmountRec():
 
     for item in paymentList:
         try:
-            tot -= float(item[2].replace(',', ''))
+            tot -= item[2]
         except:
             pass
     
     print("Total = ", tot)
-    amountLabel.configure(text='Rs. {:10,.2f}'.format(tot))
+    amountLabel.configure(text='Rs. {:0,.2f}'.format(tot))
 
 # command for returning item
 def returnItem(index):    
@@ -133,7 +175,7 @@ itemRentQtyEntry.grid(row=4, column=1, pady=10)
 
 searchItemButton = Button(itemDetail, text="Search Item", width=20, command=searchEquipButton)
 searchItemButton.grid(row=0, column=2, padx=5)
-rentItemButton = Button(itemDetail, text="Rent Item", width=20)
+rentItemButton = Button(itemDetail, text="Rent Item", width=20, command=rentItemButton)
 rentItemButton.grid(row=4, column=2, padx=5)
 
 # frame for the rentd item list
@@ -183,6 +225,7 @@ def updateRentTable():
     
     global scrollbar
     global listItems
+    global rentList
 
     # removing previous items
     for item in listItems:
@@ -190,16 +233,20 @@ def updateRentTable():
     
     listItems = []
 
+    # sorting the list
+    rentList = sorted(rentList, key=lambda item: (~item[-1], item[2]), reverse=True)
+
+
     for index in range(len(rentList)):
         for dataIndex in range(len(rentList[0])):
             if not dataIndex == len(rentList[0])-1:
-                label = Label(frame, text=str(rentList[index][dataIndex]), height=1, bg='grey10', fg='white', borderwidth=1, relief="groove")
+                label = Label(frame, text=str(rentList[index][dataIndex]), height=2, bg='grey10', fg='white', borderwidth=1, relief="groove")
                 #label.after(1000, label.master.destroy)
             else:
                 if (rentList[index][dataIndex]):
-                    label = Label(frame, height=1, bg='green', fg='white', borderwidth=1, relief="groove")
+                    label = Label(frame, height=2, bg='green', fg='white', borderwidth=1, relief="groove")
                 else:
-                    label = Label(frame, height=1, bg='red', fg='white', borderwidth=1, relief="groove") 
+                    label = Label(frame, height=2, bg='red', fg='white', borderwidth=1, relief="groove") 
                     button = Button(frame, text="Returned", command=lambda idx = index:returnItem(idx))
                     button.grid(row=index+1, column=dataIndex+1)
                     listItems.append(button)
@@ -245,16 +292,17 @@ H03 = Label(frame_pay, text="Ammount", height=2, bg='grey', fg='white', borderwi
 listItems_pay = []
 
 paymentList = [
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', '1500'],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
+    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
 ]
 
 def updatePayTable():
     global scrollbar_pay
     global listItems_pay
+    global paymentList
 
     # removing previous items
     for item in listItems_pay:
@@ -262,9 +310,15 @@ def updatePayTable():
     
     listItems_pay = []
 
+    # sorting the list
+    paymentList = sorted(paymentList, key=lambda item: item[0], reverse=True)
+
     for index in range(len(paymentList)):
         for dataIndex in range(len(paymentList[0])):
-            label = Label(frame_pay, text=str(paymentList[index][dataIndex]), height=1, bg='grey10', fg='white', borderwidth=1, relief="groove")
+            if (dataIndex == len(paymentList[index])-1):
+                label = Label(frame_pay, text='{:0,.2f}'.format(paymentList[index][dataIndex]), height=1, bg='grey10', fg='white', borderwidth=1, relief="groove")
+            else:
+                label = Label(frame_pay, text=str(paymentList[index][dataIndex]), height=1, bg='grey10', fg='white', borderwidth=1, relief="groove")
             #label.after(1000, label.master.destroy)
             label.grid(row=index+1, column=dataIndex, sticky='we')
             listItems_pay.append(label)
@@ -292,15 +346,19 @@ amountLabel_.grid(row=0, column=0, padx=10, pady=10, columnspan=3)
 amountLabel = Label(paymentStat, text="Rs. 100000", font=("Courier", 44))
 amountLabel.grid(row=1, column=0, padx=10, pady=10, columnspan=3)
 
-labelTmp = Label(paymentStat, text="Ammount Paid ",)
+labelTmp = Label(paymentStat, text="Description ",)
 labelTmp.grid(row=2, column=0)
+descEntry = Entry(paymentStat, width=30)
+descEntry.grid(row=2, column=1, pady=10)
+labelTmp = Label(paymentStat, text="Amount Paid ",)
+labelTmp.grid(row=3, column=0)
 amountEntry = Entry(paymentStat, width=30)
-amountEntry.grid(row=2, column=1, pady=10)
+amountEntry.grid(row=3, column=1, pady=10)
 
-payButton = Button(paymentStat, text="Make Payment", height=3, bg="green", fg="white")
-payButton.grid(row=3, column=0, sticky=EW, padx=10)
+payButton = Button(paymentStat, text="Make Payment", height=3, bg="green", fg="white", command=makePaymentButton)
+payButton.grid(row=4, column=0, sticky=EW, padx=10)
 printBillButton = Button(paymentStat, text="Print Bill", height=3, bg="grey", fg="white")
-printBillButton.grid(row=4, column=0, sticky=EW, padx=10, pady=5)
+printBillButton.grid(row=5, column=0, sticky=EW, padx=10, pady=5)
 
 updatePayTable()
 updateRentTable()

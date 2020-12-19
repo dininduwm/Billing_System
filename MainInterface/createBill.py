@@ -1,48 +1,6 @@
 from docx import Document
 from docx.shared import Inches
 
-# document = Document()
-
-# document.add_heading('Document Title', 0)
-
-# p = document.add_paragraph('A plain paragraph having some ')
-# p.add_run('bold').bold = True
-# p.add_run(' and some ')
-# p.add_run('italic.').italic = True
-
-# document.add_heading('Heading, level 1', level=1)
-# document.add_paragraph('Intense quote', style='Intense Quote')
-
-# document.add_paragraph(
-#     'first item in unordered list', style='List Bullet'
-# )
-# document.add_paragraph(
-#     'first item in ordered list', style='List Number'
-# )
-
-# #document.add_picture('monty-truth.png', width=Inches(1.25))
-
-# records = (
-#     (3, '101', 'Spam'),
-#     (7, '422', 'Eggs'),
-#     (4, '631', 'Spam, spam, eggs, and spam')
-# )
-
-# table = document.add_table(rows=1, cols=3)
-# hdr_cells = table.rows[0].cells
-# hdr_cells[0].text = 'Qty'
-# hdr_cells[1].text = 'Id'
-# hdr_cells[2].text = 'Desc'
-# for qty, id, desc in records:
-#     row_cells = table.add_row().cells
-#     row_cells[0].text = str(qty)
-#     row_cells[1].text = id
-#     row_cells[2].text = desc
-
-# document.add_page_break()
-
-# document.save('demo.docx')
-
 # make rows bold
 def make_rows_bold(*rows):
     for row in rows:
@@ -54,7 +12,7 @@ def make_rows_bold(*rows):
 # creating the bill for print
 def creatBill(data):
     document = Document()
-    document.add_heading('Bill No: {}'.format(data['bill_no']), 0)
+    document.add_heading('Bill No: {}'.format(data['bill_no']))
 
     table = document.add_table(rows=4, cols=2)
     table.rows[0].cells[0].text = 'Date'
@@ -93,10 +51,25 @@ def creatBill(data):
     row = table.add_row()
     row_cells = row.cells
     row_cells[1].text = "Total"
-    row_cells[5].text = data['ItemTotal']
+    row_cells[5].text = '{:10,.2f}'.format(data['ItemTotal'])
     make_rows_bold(row)
 
-    document.add_heading('Amount to be paid:       Rs. {:,.2f}'.format(float(data['amount'])), level=1)
+    document.add_heading('Payment Details', level=1)
+    table = document.add_table(rows=5, cols=2)
+    table.style = 'Table Grid'  
+
+    table.rows[0].cells[0].text = 'Previous Amount'
+    table.rows[0].cells[1].text = 'Rs. {:10,.2f}'.format(data['payment']+data['amountToBe']-data['ItemTotal'])
+    table.rows[1].cells[0].text = 'This bill Amount'
+    table.rows[1].cells[1].text = 'Rs. {:10,.2f}'.format(data['ItemTotal'])
+    table.rows[2].cells[0].text = 'Total Amount For this Bill'
+    table.rows[2].cells[1].text = '            Rs. {:10,.2f}'.format(data['payment']+data['amountToBe'])
+    table.rows[3].cells[0].text = 'Payment'
+    table.rows[3].cells[1].text = '-(Rs. {:10,.2f})'.format(data['payment'])
+    table.rows[4].cells[0].text = 'Amount to be paid'
+    table.rows[4].cells[1].text = '            Rs. {:10,.2f}'.format(data['amountToBe'])
+
+    make_rows_bold(table.rows[0], table.rows[1], table.rows[2], table.rows[3], table.rows[4])
 
     document.save('demo.docx')
 
@@ -106,15 +79,16 @@ data = {
     'id': '199732400730',
     'name': 'Dinindu Udana Thilakarathna',
     'tp': '0777186434',
-    'date': '2020-12-25',
-    'amount': 12000,
+    'date': '2020-12-10 17:36:41',
+    'payment': 13000,
+    'amountToBe': 12000,
     'RentedItems': [
         ['Poker sdrfgsdfgsdfg sdfg sdfgs', '2020-12-10', '2', '2', '1,500', '12,000'],
         ['Poker', '2020-12-10', '2', '2', '1,500', '12,000'],
         ['Poker', '2020-12-10', '2', '2', '1,500', '12,000'],
         ['Poker', '2020-12-10', '2', '2', '1,500', '12,000'],
     ],
-    'ItemTotal': '48,000'
+    'ItemTotal': 10000,
 }
 
 creatBill(data)
