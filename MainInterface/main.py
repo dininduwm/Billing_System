@@ -1,16 +1,13 @@
 from tkinter import *
+from tkinter import simpledialog
 from time import sleep
 from fetchData import *
-from datetime import date
+from datetime import date, datetime
 
 # main window
 root = Tk()
 root.title("Renting Page")
-root.geometry("1500x700")
-
-def test():
-    updateRentTable()
-    updatePayTable()
+root.geometry("1600x700")
 
 def createCustomerButton():
     nic = nicEntry.get()
@@ -26,25 +23,43 @@ def searchCustomerButton():
         nameEntry.insert(0, data['name'])
         tpEntry.insert(0, data['tp'])
 
+def searchEquipButton():
+    code = itemCodeEntry.get()
+    data = getEquipment(code)
+    if data:
+        itemRateLabel.configure(text='Item Rate                 ---> {:0,.2f}'.format(float(data['rate'])))
+        itemQtyLabel.configure(text='Item Available Qty  ---> {}'.format(int(data['qty'])))
+        itemDescLabel.configure(text='Item Description     ---> {}'.format(data['desc']))
+
 def calculateCost():
+    # date format
+    format = "%Y-%m-%d %H:%M:%S"
+
     ammount = 0
     for item in rentList:
-        if item[8]:
-            returnedDate = date.fromisoformat(item[7])
+        if item[9]:
+            returnedDate = datetime.strptime(item[8], format)
         else:
-            returnedDate = date.today()
-        rentedDate = date.fromisoformat(item[2])
-        days = (returnedDate-rentedDate).total_seconds()/(3600*24)
-        days = max(1, days)
+            returnedDate = datetime.now()
+        rentedDate = datetime.strptime(item[2], format)
+        hours = (returnedDate-rentedDate).total_seconds()/(3600)
+        if (hours <= 6):
+            days = 0.5
+        else:
+            days = hours//24
+            if hours%24 > 2:
+                days += 1
+            days = max(1, days)
         # calculating the cost
-        item[6] = '{:20,.2f}'.format(float(item[4])*float(item[5])*days)
+        item[6] = str(days)
+        item[7] = '{:20,.2f}'.format(float(item[4])*float(item[5])*days)
 
 # calculate tehe ammount to be recieved
 def calculateAmmountRec():
     tot = 0
     for item in rentList:
         try:
-            tot += float(item[6].replace(',', ''))
+            tot += float(item[7].replace(',', ''))
         except:
             pass
 
@@ -58,11 +73,21 @@ def calculateAmmountRec():
     amountLabel.configure(text='Rs. {:10,.2f}'.format(tot))
 
 # command for returning item
-def returnItem(index):
-    rentList[index][8] = True
-    rentList[index][7] = date.today().isoformat()
+def returnItem(index):    
+    # date format
+    format = "%Y-%m-%d %H:%M:%S"
+    # asking for the number of qty returened
+    USER_INP = simpledialog.askinteger(title="Test",
+                                  prompt="Number of items returened (Enter -1 if all the items returned)")
+    if (USER_INP == -1 or int(USER_INP) > rentList[index][4]):
+        pass
+    else:
+        rentList.append(rentList[index].copy())
+        rentList[-1][4] -= int(USER_INP)
+        rentList[index][4] = int(USER_INP)
+    rentList[index][9] = True
+    rentList[index][8] = datetime.now().strftime(format)
     updateRentTable()
-    print("Item returned: {}".format(index))
 
 # frame for the costomer details
 customerDetail = Frame(root, highlightbackground="black", highlightthickness=1)
@@ -92,22 +117,24 @@ itemDetail.grid(row=1, column=0, padx=10, sticky=NSEW)
 # creating items inside the item details
 itemCodeLabel = Label(itemDetail, text="Item code ")
 itemCodeLabel.grid(row=0, column=0, sticky=W, columnspan=2)
+itemDescLabel = Label(itemDetail, text="Item Description     ---> ")
+itemDescLabel.grid(row=1, column=0, sticky=W, columnspan=2, pady=10)
 itemRateLabel = Label(itemDetail, text="Item Rate                 ---> ")
-itemRateLabel.grid(row=1, column=0, sticky=W, pady=10)
+itemRateLabel.grid(row=2, column=0, sticky=W)
 itemQtyLabel = Label(itemDetail, text="Item Available Qty  ---> ")
-itemQtyLabel.grid(row=2, column=0, sticky=W, columnspan=2, pady=10)
+itemQtyLabel.grid(row=3, column=0, sticky=W, columnspan=2, pady=10)
 itemRentQtyLabel = Label(itemDetail, text="Renting Qty")
-itemRentQtyLabel.grid(row=3, column=0, sticky=W,)
+itemRentQtyLabel.grid(row=4, column=0, sticky=W,)
 
 itemCodeEntry = Entry(itemDetail, width=30, )
 itemCodeEntry.grid(row=0, column=1, pady=10)
 itemRentQtyEntry = Entry(itemDetail, width=30, )
-itemRentQtyEntry.grid(row=3, column=1, pady=10)
+itemRentQtyEntry.grid(row=4, column=1, pady=10)
 
-searchItemButton = Button(itemDetail, text="Search Item", width=20)
+searchItemButton = Button(itemDetail, text="Search Item", width=20, command=searchEquipButton)
 searchItemButton.grid(row=0, column=2, padx=5)
 rentItemButton = Button(itemDetail, text="Rent Item", width=20)
-rentItemButton.grid(row=3, column=2, padx=5)
+rentItemButton.grid(row=4, column=2, padx=5)
 
 # frame for the rentd item list
 rentdItems = Frame(root, highlightbackground="black", highlightthickness=1, height=100)
@@ -130,22 +157,24 @@ canvas.create_window((0,0), window=frame, anchor='nw')
 # crating the header of the table
 H01 = Label(frame, text="Item Code", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=0, sticky='we')
 H02 = Label(frame, text="Item Name", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=1, sticky='we')
-H03 = Label(frame, text="Bill No", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
-H04 = Label(frame, text="Rented Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=3, sticky='we')
+H03 = Label(frame, text="Rented Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
+H04 = Label(frame, text="Bill No", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=3, sticky='we')
 H05 = Label(frame, text="Qty", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=4, sticky='we')
 H06 = Label(frame, text="Rate/ Day", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=5, sticky='we')
-H07 = Label(frame, text="Amount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=6, sticky='we')
-H08 = Label(frame, text="Returned Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=7, sticky='we')
-H09 = Label(frame, text="Returned", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=8, sticky='we')
+H07 = Label(frame, text="Day", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=6, sticky='we')
+H08 = Label(frame, text="Amount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=7, sticky='we')
+H09 = Label(frame, text="Returned Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=8, sticky='we')
+H10 = Label(frame, text="Returned", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=9, sticky='we')
 
 listItems = []
 
+# list which use to build tables
 rentList = [
-    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
-    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
-    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
-    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 0, '', False],
-    ['0001', '***************************************', '2020-12-12', 'B001', 2, 1500, 3000, '2020-12-13', True],
+    ['0001', '***************************************', '2020-12-10 17:36:41', 'B001', 2, 1500, 0, 0, '', False],
+    ['0001', 'Test', '2020-12-10 17:36:41', 'B001', 108, 1500, 0, 0, '', False],
+    ['0001', '***************************************', '2020-12-10 17:36:41', 'B001', 2, 1500, 0, 0, '', False],
+    ['0001', '***************************************', '2020-12-10 17:36:41', 'B001', 2, 1500, 0, 0, '', False],
+    ['0001', '***************************************', '2020-12-18 15:36:41', 'B001', 2, 1500, 3000, 1, '2020-12-19 17:36:41', True],
 ]
 
 def updateRentTable():

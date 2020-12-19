@@ -38,3 +38,23 @@ def getCustomer(nic):
             messagebox.showerror(title="Rent Page", message="Network or server Error")
 
     return None
+
+# taking a equip
+def getEquipment(code):
+    data = {'code': code}
+
+    with requests.get(url=URL+'getEquip.php', params=data) as req:
+        if req.status_code == 200:
+            print(req.text)
+            data = json.loads(req.text)
+            print(data)
+            if len(data['details']) > 0:
+                messagebox.showinfo(title="Rent Page", message="Equipment details loaded")
+                return data['details'][0]
+            else:
+                messagebox.showinfo(title="Rent Page", message="Invalid code.")
+        else:
+            messagebox.showerror(title="Rent Page", message="Network or server Error")
+
+    return None
+
