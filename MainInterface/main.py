@@ -2,12 +2,30 @@ from tkinter import *
 from tkinter import simpledialog, messagebox
 from time import sleep
 from fetchData import *
+from createBill import createBill
 from datetime import date, datetime
 
 # variables to handle the preocess
 isItemLoaded = False
 itemData = None
 billNo = '0002'
+listItems_pay = []
+paymentList = []
+rentListChanges = []
+rentListNew = []
+payment = None
+dataToPrint = {
+    'bill_no': '',
+    'id': '',
+    'name': '',
+    'tp': '',
+    'date': '',
+    'payment': 0,
+    'amountToBe': 0,
+    'RentedItems': [],
+    'ItemTotal': 0,
+}
+amountToBePaid = 0
 
 # main window
 root = Tk()
@@ -22,13 +40,24 @@ def createCustomerButton():
     createCustomer(nic, name, tp)
 
 def searchCustomerButton():
+    global dataToPrint
+
     nic = nicEntry.get()
     data = getCustomer(nic)
-    if data:
+    if data[0]:
         nameEntry.delete(0, 'end')
         tpEntry.delete(0, 'end')
-        nameEntry.insert(0, data['name'])
-        tpEntry.insert(0, data['tp'])
+        nameEntry.insert(0, data[0]['name'])
+        tpEntry.insert(0, data[0]['tp'])
+        # adding details to print
+        dataToPrint['bill_no'] = billNo
+        dataToPrint['id'] = nic
+        dataToPrint['name'] = data[0]['name']
+        dataToPrint['tp'] = data[0]['tp']
+
+        fillRentedList(data[1])
+        fillPaymentList(data[2])
+        fillPrintData()
 
 def searchEquipButton():
     global isItemLoaded
@@ -56,6 +85,19 @@ def rentItemButton():
         if qty <= int(itemData['qty']):
             # add new Item to the renting list
             rentList.append([itemData['code'], itemData['desc'], datetime.now().strftime(format), billNo, qty, int(itemData['rate']), 0, 0, '', False])
+            # list to be updated
+            rentListNew.append([itemData['code'], datetime.now().strftime(format), billNo, qty])
+            
+            # adding data to the bill
+            calculateCost()
+            item = rentList[-1]
+            # converting the date
+            date = datetime.strptime(item[2], "%Y-%m-%d %H:%M:%S")
+            # adding to the print bill list
+            arr = [item[1], date.strftime("%Y-%m-%d"), item[6], item[4], '{:0,.2f}'.format(item[5]), item[7]]
+            dataToPrint['RentedItems'].append(list(map(str, arr)))
+
+            # updating the rent table
             updateRentTable()
         else:
             messagebox.showerror(title="Rent Page", message="Qty exceed the available qty")
@@ -68,10 +110,38 @@ def rentItemButton():
 def makePaymentButton():
     # date format
     format = "%Y-%m-%d"
-    paymentList.append([datetime.now().strftime(format), descEntry.get(), int(amountEntry.get())])
-    updatePayTable()
+    paymentList.append([datetime.now().strftime(format), billNo, descEntry.get(), int(amountEntry.get())])
+    updatePayTable()    
+
+    global payment
+    # date format
+    format = "%Y-%m-%d %H:%M:%S"
+    payment = [datetime.now().strftime(format), billNo, descEntry.get(), int(amountEntry.get())]
     descEntry.delete(0, 'end')
     amountEntry.delete(0, 'end')
+    payButton.config(state='disabled')
+
+# printing the bill
+def printBillButton():
+    global dataToPrint
+
+    print('change rent', rentListChanges)
+    print('new rent', rentListNew)
+    print('payment', payment)
+    print('print data', dataToPrint)
+
+    # printin bill procedure    
+    dataToPrint['amountToBe'] = amountToBePaid
+    dataToPrint['date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    tot = 0
+    for item in dataToPrint['RentedItems']:
+        tot += float(item[5].replace(',',''))
+    dataToPrint['ItemTotal'] = tot
+    if payment:
+        dataToPrint['payment'] = float(payment[-1])
+
+    # creating the bill
+    createBill(dataToPrint)
 
 def calculateCost():
     # date format
@@ -94,10 +164,12 @@ def calculateCost():
             days = max(1, days)
         # calculating the cost
         item[6] = str(days)
-        item[7] = '{:20,.2f}'.format(float(item[4])*float(item[5])*days)
+        item[7] = '{:0,.2f}'.format(float(item[4])*float(item[5])*days)
 
 # calculate tehe ammount to be recieved
 def calculateAmmountRec():
+    global amountToBePaid
+
     tot = 0
     for item in rentList:
         try:
@@ -107,28 +179,78 @@ def calculateAmmountRec():
 
     for item in paymentList:
         try:
-            tot -= item[2]
+            tot -= item[3]
         except:
             pass
     
     print("Total = ", tot)
+    amountToBePaid = tot
     amountLabel.configure(text='Rs. {:0,.2f}'.format(tot))
+
+# fill the rented item list after fetching a costomer
+def fillRentedList(data):
+    #['0001', '***************************************', '2020-12-10 17:36:41', 'B001', 2, 1500, 0, 0, '', False],
+    global rentList
+    global dataToPrint
+    rentList = []
+    dataToPrint['RentedItems'] = []
+
+    for item in data:
+        if item['returned_date']:
+            returnedState = True
+            returnedDate = item['returned_date']
+        else:
+            returnedState = False
+            returnedDate = '' 
+        rentList.append([item['code'], item['description'], item['rented_date'], item['bill_no'], int(item['qty']), float(item['rate']),0,0,returnedDate, returnedState])
+        
+    #print(rentList)
+    updateRentTable()
+
+# filling the print data list initialy
+def fillPrintData():
+    for item in rentList:
+        if not item[-1]:
+            #['Poker', '2020-12-10', '2', '2', '1,500', '12,000'],
+            # converting the date
+            date = datetime.strptime(item[2], "%Y-%m-%d %H:%M:%S")
+            # adding to the print bill list
+            arr = [item[1], date.strftime("%Y-%m-%d"), item[6], item[4], '{:0,.2f}'.format(item[5]), item[7]]
+            dataToPrint['RentedItems'].append(list(map(str, arr)))
+
+# fill the payment item list after fetching a costomer
+def fillPaymentList(data):
+    global paymentList    
+    paymentList = []
+    for item in data:
+        #['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500]
+        paymentList.append([item['date'], item['bill_no'], item['description'], float(item['amount'])])
+    updatePayTable()
 
 # command for returning item
 def returnItem(index):    
     # date format
     format = "%Y-%m-%d %H:%M:%S"
-    # asking for the number of qty returened
-    USER_INP = simpledialog.askinteger(title="Test",
-                                  prompt="Number of items returened (Enter -1 if all the items returned)")
-    if (USER_INP == -1 or int(USER_INP) > rentList[index][4]):
-        pass
-    else:
-        rentList.append(rentList[index].copy())
-        rentList[-1][4] -= int(USER_INP)
-        rentList[index][4] = int(USER_INP)
+
+    if rentList[index][4] > 1:
+        # asking for the number of qty returened
+        USER_INP = simpledialog.askinteger(title="Test",
+                                    prompt="Number of items returened (Enter -1 if all the items returned)")
+        if (USER_INP == -1 or int(USER_INP) > rentList[index][4]):
+            pass
+        else:
+            rentList.append(rentList[index].copy())
+            rentList[-1][4] -= int(USER_INP)
+            rentList[index][4] = int(USER_INP)
+            # add the item to new item added list
+            rentListNew.append([rentList[-1][0], rentList[-1][2], rentList[-1][3], rentList[-1][4]])
+
     rentList[index][9] = True
     rentList[index][8] = datetime.now().strftime(format)
+
+    # new item added to the item chnged list
+    rentListChanges.append([rentList[index][0], rentList[index][3], rentList[index][4], rentList[index][8]])
+    
     updateRentTable()
 
 # frame for the costomer details
@@ -211,13 +333,7 @@ H10 = Label(frame, text="Returned", height=2, bg='grey', fg='white', borderwidth
 listItems = []
 
 # list which use to build tables
-rentList = [
-    ['0001', '***************************************', '2020-12-10 17:36:41', 'B001', 2, 1500, 0, 0, '', False],
-    ['0001', 'Test', '2020-12-10 17:36:41', 'B001', 108, 1500, 0, 0, '', False],
-    ['0001', '***************************************', '2020-12-10 17:36:41', 'B001', 2, 1500, 0, 0, '', False],
-    ['0001', '***************************************', '2020-12-10 17:36:41', 'B001', 2, 1500, 0, 0, '', False],
-    ['0001', '***************************************', '2020-12-18 15:36:41', 'B001', 2, 1500, 3000, 1, '2020-12-19 17:36:41', True],
-]
+rentList = []
 
 def updateRentTable():
      # calculating the calculate cost
@@ -286,18 +402,9 @@ canvas_pay.create_window((0,0), window=frame_pay, anchor='nw')
 
 # crating the header of the table
 H01 = Label(frame_pay, text="Date", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=0, sticky='we')
-H02 = Label(frame_pay, text="Description", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=1, sticky='we')
-H03 = Label(frame_pay, text="Ammount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
-
-listItems_pay = []
-
-paymentList = [
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-    ['2020-12-12', 'asdjfasdjfalsdfasdfasdf', 1500],
-]
+H02 = Label(frame_pay, text="Bill No", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=1, sticky='we')
+H03 = Label(frame_pay, text="Description", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=2, sticky='we')
+H04 = Label(frame_pay, text="Ammount", height=2, bg='grey', fg='white', borderwidth=3, relief="groove").grid(row=0, column=3, sticky='we')
 
 def updatePayTable():
     global scrollbar_pay
@@ -341,7 +448,7 @@ def updatePayTable():
 paymentStat = Frame(root, highlightbackground="black", highlightthickness=1, height=100, width=500)
 paymentStat.grid(row=0, column=1, padx=10, pady=10, rowspan=2, sticky=NSEW)
 
-amountLabel_ = Label(paymentStat, text="Ammount to be recieved", font=("Courier", 30))
+amountLabel_ = Label(paymentStat, text="Amount to be recieved", font=("Courier", 30))
 amountLabel_.grid(row=0, column=0, padx=10, pady=10, columnspan=3)
 amountLabel = Label(paymentStat, text="Rs. 100000", font=("Courier", 44))
 amountLabel.grid(row=1, column=0, padx=10, pady=10, columnspan=3)
@@ -357,7 +464,7 @@ amountEntry.grid(row=3, column=1, pady=10)
 
 payButton = Button(paymentStat, text="Make Payment", height=3, bg="green", fg="white", command=makePaymentButton)
 payButton.grid(row=4, column=0, sticky=EW, padx=10)
-printBillButton = Button(paymentStat, text="Print Bill", height=3, bg="grey", fg="white")
+printBillButton = Button(paymentStat, text="Print Bill", height=3, bg="grey", fg="white", command=printBillButton)
 printBillButton.grid(row=5, column=0, sticky=EW, padx=10, pady=5)
 
 updatePayTable()

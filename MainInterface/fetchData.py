@@ -31,7 +31,7 @@ def getCustomer(nic):
             print(data)
             if len(data['details']) > 0:
                 messagebox.showinfo(title="Rent Page", message="Customer details loaded")
-                return data['details'][0]
+                return (data['details'][0], data['billed_item'], data['payments'])
             else:
                 messagebox.showinfo(title="Rent Page", message="Customer not found. Please create a new user")
         else:

@@ -10,9 +10,12 @@ def make_rows_bold(*rows):
                     run.font.bold = True
 
 # creating the bill for print
-def creatBill(data):
+def createBill(data):
     document = Document()
     document.add_heading('Bill No: {}'.format(data['bill_no']))
+
+    # sorting the rented item list
+    data['RentedItems'] = sorted(data['RentedItems'], key=lambda item: item[1])
 
     table = document.add_table(rows=4, cols=2)
     table.rows[0].cells[0].text = 'Date'
@@ -91,4 +94,4 @@ data = {
     'ItemTotal': 10000,
 }
 
-creatBill(data)
+#creatBill(data)
