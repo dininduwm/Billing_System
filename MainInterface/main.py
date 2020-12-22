@@ -8,7 +8,7 @@ from datetime import date, datetime
 # variables to handle the preocess
 isItemLoaded = False
 itemData = None
-billNo = '0002'
+billNo = '0003'
 listItems_pay = []
 paymentList = []
 rentListChanges = []
@@ -109,13 +109,12 @@ def rentItemButton():
 # button to make a payment
 def makePaymentButton():
     # date format
-    format = "%Y-%m-%d"
+    format = "%Y-%m-%d %H:%M:%S"
     paymentList.append([datetime.now().strftime(format), billNo, descEntry.get(), int(amountEntry.get())])
     updatePayTable()    
 
     global payment
     # date format
-    format = "%Y-%m-%d %H:%M:%S"
     payment = [datetime.now().strftime(format), billNo, descEntry.get(), int(amountEntry.get())]
     descEntry.delete(0, 'end')
     amountEntry.delete(0, 'end')
@@ -124,6 +123,7 @@ def makePaymentButton():
 # printing the bill
 def printBillButton():
     global dataToPrint
+    global billNo
 
     print('change rent', rentListChanges)
     print('new rent', rentListNew)
@@ -132,7 +132,8 @@ def printBillButton():
 
     # printin bill procedure    
     dataToPrint['amountToBe'] = amountToBePaid
-    dataToPrint['date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dataToPrint['date'] = date
     tot = 0
     for item in dataToPrint['RentedItems']:
         tot += float(item[5].replace(',',''))
@@ -140,8 +141,12 @@ def printBillButton():
     if payment:
         dataToPrint['payment'] = float(payment[-1])
 
-    # creating the bill
-    createBill(dataToPrint)
+    # send bil to database
+    if (setBillData(rentListNew, rentListChanges, payment, date, billNo, nicEntry.get())):
+        # creating the bill
+        createBill(dataToPrint, billNo)
+        billNo = "%04d"%(int(billNo)+1)
+        print(billNo)
 
 def calculateCost():
     # date format
@@ -241,6 +246,7 @@ def returnItem(index):
         else:
             rentList.append(rentList[index].copy())
             rentList[-1][4] -= int(USER_INP)
+            rentList[-1][3] = billNo
             rentList[index][4] = int(USER_INP)
             # add the item to new item added list
             rentListNew.append([rentList[-1][0], rentList[-1][2], rentList[-1][3], rentList[-1][4]])

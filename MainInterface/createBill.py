@@ -10,7 +10,7 @@ def make_rows_bold(*rows):
                     run.font.bold = True
 
 # creating the bill for print
-def createBill(data):
+def createBill(data, bill_no):
     document = Document()
     document.add_heading('Bill No: {}'.format(data['bill_no']))
 
@@ -74,7 +74,7 @@ def createBill(data):
 
     make_rows_bold(table.rows[0], table.rows[1], table.rows[2], table.rows[3], table.rows[4])
 
-    document.save('demo.docx')
+    document.save('{}.docx'.format(bill_no))
 
 
 data = {

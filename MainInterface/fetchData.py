@@ -58,3 +58,27 @@ def getEquipment(code):
 
     return None
 
+# sending the bill data to the server
+def setBillData(rentListNew, rentListChange, payment, date, bill_no, nic):
+    data = {
+        'rent_new': rentListNew,
+        'rent_change': rentListChange,
+        'payment': payment,
+    }
+
+    reqData = {
+        'data': json.dumps(data),
+        'date': date,
+        'nic': nic,
+        'bill_no': bill_no,
+    }
+
+    with requests.post(url=URL+'saveBill.php', data=reqData) as req:
+        if req.status_code == 200:
+            print(req.text)
+            messagebox.showinfo(title="Rent Page", message="Data saving successfull")
+            return True
+        else:
+            messagebox.showerror(title="Rent Page", message="Network or server Error")
+
+    return False
