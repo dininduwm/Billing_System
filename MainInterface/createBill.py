@@ -18,13 +18,13 @@ def createBill(data, bill_no):
     data['RentedItems'] = sorted(data['RentedItems'], key=lambda item: item[1])
 
     table = document.add_table(rows=4, cols=2)
-    table.rows[0].cells[0].text = 'Date'
+    table.rows[0].cells[0].text = 'දිනය'
     table.rows[0].cells[1].text = data['date']
-    table.rows[1].cells[0].text = 'ID No'
+    table.rows[1].cells[0].text = 'ජා. අංකය'
     table.rows[1].cells[1].text = data['id']
-    table.rows[2].cells[0].text = 'Name'
+    table.rows[2].cells[0].text = 'නම'
     table.rows[2].cells[1].text = data['name']
-    table.rows[3].cells[0].text = 'TP No'
+    table.rows[3].cells[0].text = 'දු. අංකය'
     table.rows[3].cells[1].text = data['tp']
 
     # rented item detailed section
@@ -32,12 +32,12 @@ def createBill(data, bill_no):
 
     table = document.add_table(rows=1, cols=6)
     table.style = 'Table Grid'  
-    table.rows[0].cells[0].text = 'Name'
-    table.rows[0].cells[1].text = 'Rented date'
-    table.rows[0].cells[2].text = 'Days'
-    table.rows[0].cells[3].text = 'Qty'
-    table.rows[0].cells[4].text = 'Rate'
-    table.rows[0].cells[5].text = 'Amount'
+    table.rows[0].cells[0].text = 'භාණ්ඩ වර්ගය'
+    table.rows[0].cells[1].text = 'කුලියට ගත් දිනය'
+    table.rows[0].cells[2].text = 'දින ගණන'
+    table.rows[0].cells[3].text = 'ප්‍රමාණය'
+    table.rows[0].cells[4].text = 'දිනකට කුලිය'
+    table.rows[0].cells[5].text = 'මුදල'
 
     make_rows_bold(table.rows[0])
 
@@ -61,15 +61,15 @@ def createBill(data, bill_no):
     table = document.add_table(rows=5, cols=2)
     table.style = 'Table Grid'  
 
-    table.rows[0].cells[0].text = 'Previous Amount'
+    table.rows[0].cells[0].text = 'හිඟ මුදල'
     table.rows[0].cells[1].text = 'Rs. {:10,.2f}'.format(data['payment']+data['amountToBe']-data['ItemTotal'])
-    table.rows[1].cells[0].text = 'This bill Amount'
+    table.rows[1].cells[0].text = 'මෙම බිල්පතෙහි වටිනාකම'
     table.rows[1].cells[1].text = 'Rs. {:10,.2f}'.format(data['ItemTotal'])
-    table.rows[2].cells[0].text = 'Total Amount For this Bill'
+    table.rows[2].cells[0].text = 'මුළු මුදල'
     table.rows[2].cells[1].text = '            Rs. {:10,.2f}'.format(data['payment']+data['amountToBe'])
-    table.rows[3].cells[0].text = 'Payment'
+    table.rows[3].cells[0].text = 'ගෙවීම්'
     table.rows[3].cells[1].text = '-(Rs. {:10,.2f})'.format(data['payment'])
-    table.rows[4].cells[0].text = 'Amount to be paid'
+    table.rows[4].cells[0].text = 'ගෙවිය යුතු වටිනාකම'
     table.rows[4].cells[1].text = '            Rs. {:10,.2f}'.format(data['amountToBe'])
 
     make_rows_bold(table.rows[0], table.rows[1], table.rows[2], table.rows[3], table.rows[4])
@@ -94,4 +94,4 @@ data = {
     'ItemTotal': 10000,
 }
 
-#creatBill(data)
+#createBill(data, '0012')

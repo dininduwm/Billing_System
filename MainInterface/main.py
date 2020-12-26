@@ -8,7 +8,7 @@ from datetime import date, datetime
 # variables to handle the preocess
 isItemLoaded = False
 itemData = None
-billNo = '0003'
+billNo = '0022'
 listItems_pay = []
 paymentList = []
 rentListChanges = []
