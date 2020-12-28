@@ -4,6 +4,7 @@ from time import sleep
 from fetchData import *
 from createBill import createBill
 from datetime import date, datetime
+from saveAndGetSettings import *
 
 # list of constants
 halfDayExcep = {'M0001'}
@@ -11,7 +12,7 @@ halfDayExcep = {'M0001'}
 # variables to handle the preocess
 isItemLoaded = False
 itemData = None
-billNo = '0022'
+billNo = '0003'
 rentList = []
 listItems = []
 listItems_pay = []
@@ -32,10 +33,17 @@ dataToPrint = {
 }
 amountToBePaid = 0
 
+#loading data 
+try:
+    billNo = loadConf()['billNo']
+except:
+    billNo = '0001'
+
 # main window
 root = Tk()
 root.title("Renting Page")
 root.geometry("1600x700")
+root.attributes("-fullscreen", True)
 
 def createCustomerButton():
     nic = nicEntry.get()
@@ -148,13 +156,16 @@ def printBillButton():
 
     # send bil to database
     if (setBillData(rentListNew, rentListChanges, payment, date, billNo, nicEntry.get())):
+    #if True:
         # creating the bill
         createBill(dataToPrint, billNo)
         billNo = "%04d"%(int(billNo)+1)
         print(billNo)
+        saveConf({'billNo': billNo})
+        resetButtonCmd()
 
 # resetting the form
-def resetButton(): 
+def resetButtonCmd(): 
     global isItemLoaded,itemData,paymentList,rentListChanges,rentListNew,payment,dataToPrint,amountToBePaid,rentList
     isItemLoaded = False
     itemData = None
@@ -182,6 +193,7 @@ def resetButton():
     tpEntry.delete(0, 'end')
     itemCodeEntry.delete(0, 'end')
     itemRentQtyEntry.delete(0, 'end')
+    descEntry.delete(0, 'end')
     itemRateLabel.configure(text='Item Rate                 ---> ')
     itemQtyLabel.configure(text='Item Available Qty  ---> ')
     itemDescLabel.configure(text='Item Description     ---> ')
@@ -305,25 +317,27 @@ def returnItem(index):
 customerDetail = Frame(root, highlightbackground="black", highlightthickness=1)
 customerDetail.grid(row=0, column=0, padx=10, pady=10)
 # creating the items inside the customer Frame
+billNoLabel = Label(customerDetail, text="Bill No {}".format(billNo), font=("Courier", 30))
+billNoLabel.grid(row=0, column=0)
 nicLabel = Label(customerDetail, text="National Id No ",)
-nicLabel.grid(row=0, column=0)
+nicLabel.grid(row=1, column=0, sticky=W)
 nameLabel = Label(customerDetail, text="Name ")
-nameLabel.grid(row=1, column=0, sticky=W) 
+nameLabel.grid(row=2, column=0, sticky=W) 
 tpLabel = Label(customerDetail, text="Tp No ")
-tpLabel.grid(row=2, column=0, sticky=W) 
+tpLabel.grid(row=3, column=0, sticky=W) 
 
 nicEntry = Entry(customerDetail, width=60)
-nicEntry.grid(row=0, column=1, pady=10)
+nicEntry.grid(row=1, column=1, pady=10)
 searchButton = Button(customerDetail, text="Search Customer", width=20, command=searchCustomerButton)
-searchButton.grid(row=0, column=2, padx=5)
+searchButton.grid(row=1, column=2, padx=5)
 nameEntry = Entry(customerDetail, width=80)
-nameEntry.grid(row=1, column=1, pady=10)
+nameEntry.grid(row=2, column=1, pady=10)
 addButton = Button(customerDetail, text="Add Customer", width=20, command=createCustomerButton)
-addButton.grid(row=1, column=2, padx=5)
+addButton.grid(row=2, column=2, padx=5)
 tpEntry = Entry(customerDetail, width=40)
-tpEntry.grid(row=2, column=1, sticky=W, pady=5)
-resetButton = Button(customerDetail, text="Reset", width=20, command=resetButton)
-resetButton.grid(row=2, column=2, padx=5)
+tpEntry.grid(row=3, column=1, sticky=W, pady=5)
+resetButton = Button(customerDetail, text="Reset", width=20, command=resetButtonCmd)
+resetButton.grid(row=3, column=2, padx=5)
 
 # frame for the item details
 itemDetail = Frame(root, highlightbackground="black", highlightthickness=1)

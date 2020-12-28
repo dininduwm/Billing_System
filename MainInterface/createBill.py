@@ -11,6 +11,12 @@ def make_rows_bold(*rows):
 
 # creating the bill for print
 def createBill(data, bill_no):
+    # cheking the bill state
+    if data['payment']+data['amountToBe']-data['ItemTotal'] == 0:
+        state = False
+    else:
+        state = True
+
     document = Document()
     document.add_heading('Bill No: {}'.format(data['bill_no']))
 
@@ -30,49 +36,73 @@ def createBill(data, bill_no):
     # rented item detailed section
     document.add_heading('Rented Item details')
 
-    table = document.add_table(rows=1, cols=6)
-    table.style = 'Table Grid'  
-    table.rows[0].cells[0].text = 'භාණ්ඩ වර්ගය'
-    table.rows[0].cells[1].text = 'කුලියට ගත් දිනය'
-    table.rows[0].cells[2].text = 'දින ගණන'
-    table.rows[0].cells[3].text = 'ප්‍රමාණය'
-    table.rows[0].cells[4].text = 'දිනකට කුලිය'
-    table.rows[0].cells[5].text = 'මුදල'
+    if state:
+        table = document.add_table(rows=1, cols=6)
+        table.style = 'Table Grid'  
+        table.rows[0].cells[0].text = 'භාණ්ඩ වර්ගය'
+        table.rows[0].cells[1].text = 'කුලියට ගත් දිනය'
+        table.rows[0].cells[2].text = 'දින ගණන'
+        table.rows[0].cells[3].text = 'ප්‍රමාණය'
+        table.rows[0].cells[4].text = 'දිනකට කුලිය'
+        table.rows[0].cells[5].text = 'මුදල'
 
-    make_rows_bold(table.rows[0])
+        make_rows_bold(table.rows[0])
 
-    for item in data['RentedItems']:
-        row_cells = table.add_row().cells
-        row_cells[0].text = item[0]
-        row_cells[1].text = item[1]
-        row_cells[2].text = item[2]
-        row_cells[3].text = item[3]
-        row_cells[4].text = item[4]
-        row_cells[5].text = item[5]
+        for item in data['RentedItems']:
+            row_cells = table.add_row().cells
+            row_cells[0].text = item[0]
+            row_cells[1].text = item[1]
+            row_cells[2].text = item[2]
+            row_cells[3].text = item[3]
+            row_cells[4].text = item[4]
+            row_cells[5].text = item[5]
 
-    # total Row
-    row = table.add_row()
-    row_cells = row.cells
-    row_cells[1].text = "Total"
-    row_cells[5].text = '{:10,.2f}'.format(data['ItemTotal'])
-    make_rows_bold(row)
+        # total Row
+        row = table.add_row()
+        row_cells = row.cells
+        row_cells[1].text = "Total"
+        row_cells[5].text = '{:10,.2f}'.format(data['ItemTotal'])
+        make_rows_bold(row)
+    else:
+        table = document.add_table(rows=1, cols=4)
+        table.style = 'Table Grid'  
+        table.rows[0].cells[0].text = 'භාණ්ඩ වර්ගය'
+        table.rows[0].cells[1].text = 'කුලියට ගත් දිනය'
+        table.rows[0].cells[2].text = 'ප්‍රමාණය'
+        table.rows[0].cells[3].text = 'දිනකට කුලිය'
+
+        make_rows_bold(table.rows[0])
+
+        for item in data['RentedItems']:
+            row_cells = table.add_row().cells
+            row_cells[0].text = item[0]
+            row_cells[1].text = item[1]
+            row_cells[2].text = item[3]
+            row_cells[3].text = item[4]
 
     document.add_heading('Payment Details', level=1)
-    table = document.add_table(rows=5, cols=2)
-    table.style = 'Table Grid'  
-
-    table.rows[0].cells[0].text = 'හිඟ මුදල'
-    table.rows[0].cells[1].text = 'Rs. {:10,.2f}'.format(data['payment']+data['amountToBe']-data['ItemTotal'])
-    table.rows[1].cells[0].text = 'මෙම බිල්පතෙහි වටිනාකම'
-    table.rows[1].cells[1].text = 'Rs. {:10,.2f}'.format(data['ItemTotal'])
-    table.rows[2].cells[0].text = 'මුළු මුදල'
-    table.rows[2].cells[1].text = '            Rs. {:10,.2f}'.format(data['payment']+data['amountToBe'])
-    table.rows[3].cells[0].text = 'ගෙවීම්'
-    table.rows[3].cells[1].text = '-(Rs. {:10,.2f})'.format(data['payment'])
-    table.rows[4].cells[0].text = 'ගෙවිය යුතු වටිනාකම'
-    table.rows[4].cells[1].text = '            Rs. {:10,.2f}'.format(data['amountToBe'])
-
-    make_rows_bold(table.rows[0], table.rows[1], table.rows[2], table.rows[3], table.rows[4])
+    
+    if state:
+        table = document.add_table(rows=5, cols=2)
+        table.style = 'Table Grid'  
+        table.rows[0].cells[0].text = 'හිඟ මුදල'
+        table.rows[0].cells[1].text = 'Rs. {:10,.2f}'.format(data['payment']+data['amountToBe']-data['ItemTotal'])
+        table.rows[1].cells[0].text = 'මෙම බිල්පතෙහි වටිනාකම'
+        table.rows[1].cells[1].text = 'Rs. {:10,.2f}'.format(data['ItemTotal'])
+        table.rows[2].cells[0].text = 'මුළු මුදල'
+        table.rows[2].cells[1].text = '            Rs. {:10,.2f}'.format(data['payment']+data['amountToBe'])
+        table.rows[3].cells[0].text = 'ගෙවීම්'
+        table.rows[3].cells[1].text = '-(Rs. {:10,.2f})'.format(data['payment'])
+        table.rows[4].cells[0].text = 'ගෙවිය යුතු වටිනාකම'
+        table.rows[4].cells[1].text = '            Rs. {:10,.2f}'.format(data['amountToBe'])
+        make_rows_bold(table.rows[0], table.rows[1], table.rows[2], table.rows[3], table.rows[4])
+    else:
+        table = document.add_table(rows=1, cols=2)
+        table.style = 'Table Grid'  
+        table.rows[0].cells[0].text = 'ගෙවීම්'
+        table.rows[0].cells[1].text = 'Rs. {:10,.2f}'.format(data['payment'])
+        make_rows_bold(table.rows[0])
+    
 
     document.save('{}.docx'.format(bill_no))
 
