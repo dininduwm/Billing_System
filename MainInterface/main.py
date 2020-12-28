@@ -12,7 +12,7 @@ halfDayExcep = {'M0001'}
 # variables to handle the preocess
 isItemLoaded = False
 itemData = None
-billNo = '0003'
+billNo = '0001'
 rentList = []
 listItems = []
 listItems_pay = []
@@ -162,6 +162,7 @@ def printBillButton():
         billNo = "%04d"%(int(billNo)+1)
         print(billNo)
         saveConf({'billNo': billNo})
+        billNoLabel.configure(text="Bill No {}".format(billNo))
         resetButtonCmd()
 
 # resetting the form
