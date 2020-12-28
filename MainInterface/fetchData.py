@@ -59,12 +59,20 @@ def getEquipment(code):
     return None
 
 # sending the bill data to the server
-def setBillData(rentListNew, rentListChange, payment, date, bill_no, nic):
+def setBillData(rentListNew, rentListChange, payment, date, bill_no, nic, availQtyChange):
+    #chage data type
+    qty = []
+    for key in availQtyChange:
+        qty.append(availQtyChange[key])
+
     data = {
         'rent_new': rentListNew,
         'rent_change': rentListChange,
         'payment': payment,
+        'qty': qty,
     }
+
+    print(data)
 
     reqData = {
         'data': json.dumps(data),

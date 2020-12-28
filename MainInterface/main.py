@@ -6,6 +6,7 @@ from createBill import createBill
 from datetime import date, datetime
 from saveAndGetSettings import *
 import math
+import contextlib
 
 # list of constants
 halfDayExcep = {'M0001'}
@@ -21,6 +22,7 @@ listItems_pay = []
 paymentList = []
 rentListChanges = []
 rentListNew = []
+availQtyChange = {}
 payment = None
 dataToPrint = {
     'bill_no': '',
@@ -92,12 +94,21 @@ def searchEquipButton():
 
 # renting new item button
 def rentItemButton():
+    global availQtyChange
     # date format
     format = "%Y-%m-%d %H:%M:%S"
 
     if (isItemLoaded):
         qty = int(itemRentQtyEntry.get())
         if qty <= int(itemData['qty']):
+            # change the avail qty
+            itemData['qty'] = int(itemData['qty']) - qty
+            itemQtyLabel.configure(text='Item Available Qty  ---> {}'.format(int(itemData['qty'])))
+            if itemCodeEntry.get() in availQtyChange:
+                availQtyChange[itemCodeEntry.get()][1] -= qty
+            else:
+                availQtyChange[itemCodeEntry.get()] = [itemCodeEntry.get(), -qty]
+            print(availQtyChange)
             # add new Item to the renting list
             rentList.append([itemData['code'], itemData['desc'], datetime.now().strftime(format), billNo, qty, int(itemData['rate']), 0, 0, '', False])
             # list to be updated
@@ -157,7 +168,7 @@ def printBillButton():
         dataToPrint['payment'] = float(payment[-1])
 
     # send bil to database
-    if (setBillData(rentListNew, rentListChanges, payment, date, billNo, nicEntry.get())):
+    if (setBillData(rentListNew, rentListChanges, payment, date, billNo, nicEntry.get(), availQtyChange)):
     #if True:
         # creating the bill
         createBill(dataToPrint, billNo)
@@ -169,13 +180,14 @@ def printBillButton():
 
 # resetting the form
 def resetButtonCmd(): 
-    global isItemLoaded,itemData,paymentList,rentListChanges,rentListNew,payment,dataToPrint,amountToBePaid,rentList
+    global isItemLoaded,itemData,paymentList,rentListChanges,rentListNew,payment,dataToPrint,amountToBePaid,rentList,availQtyChange
     isItemLoaded = False
     itemData = None
     rentList = []
     paymentList = []
     rentListChanges = []
     rentListNew = []
+    availQtyChange = {}
     payment = None
     dataToPrint = {
         'bill_no': '',
@@ -302,16 +314,19 @@ def fillPaymentList(data):
 
 # command for returning item
 def returnItem(index):    
+    global availQtyChange
     # date format
     format = "%Y-%m-%d %H:%M:%S"
+    retQtyTmp = 1
 
     if rentList[index][4] > 1:
         # asking for the number of qty returened
         USER_INP = simpledialog.askinteger(title="Test",
                                     prompt="Number of items returened (Enter -1 if all the items returned)")
         if (USER_INP == -1 or int(USER_INP) > rentList[index][4]):
-            pass
+            retQtyTmp = rentList[index][4]
         else:
+            rentQtyTmp = USER_INP
             rentList.append(rentList[index].copy())
             rentList[-1][4] -= int(USER_INP)
             rentList[-1][3] = billNo
@@ -321,6 +336,14 @@ def returnItem(index):
 
     rentList[index][9] = True
     rentList[index][8] = datetime.now().strftime(format)
+
+    # change the available qty
+    if rentList[index][0] in availQtyChange:
+        availQtyChange[rentList[index][0]][1] += retQtyTmp
+    else:
+        availQtyChange[rentList[index][0]] = [rentList[index][0], retQtyTmp]
+
+    print('aaaaaaaaaaaa', availQtyChange)
 
     # new item added to the item chnged list
     rentListChanges.append([rentList[index][0], rentList[index][3], rentList[index][4], rentList[index][8]])
@@ -448,13 +471,14 @@ def updateRentTable():
             label.grid(row=index+1, column=dataIndex, sticky='we')
             listItems.append(label)
     try:
-        # destroy and create new scrol bar
-        scrollbar.destroy()
-        root.update()
-        scrollbar = Scrollbar(rentdItems, command=canvas.yview)
-        scrollbar.pack(side=RIGHT, fill='y', expand=False)
-        canvas.configure(yscrollcommand = scrollbar.set)
-        canvas.bind('<Configure>', on_configure)   
+        with contextlib.suppress():
+            # destroy and create new scrol bar
+            scrollbar.destroy()
+            root.update()
+            scrollbar = Scrollbar(rentdItems, command=canvas.yview)
+            scrollbar.pack(side=RIGHT, fill='y', expand=False)
+            canvas.configure(yscrollcommand = scrollbar.set)
+            canvas.bind('<Configure>', on_configure)   
     except:
         pass
 
@@ -510,13 +534,14 @@ def updatePayTable():
             listItems_pay.append(label)
 
     try:
-        # destroy and create new scrol bar
-        scrollbar_pay.destroy()
-        root.update()
-        scrollbar_pay = Scrollbar(paymentItems, command=canvas_pay.yview)
-        scrollbar_pay.pack(side=RIGHT, fill='y', expand=False)
-        canvas_pay.configure(yscrollcommand = scrollbar_pay.set)
-        canvas_pay.bind('<Configure>', on_configure_pay)
+        with contextlib.suppress():
+            # destroy and create new scrol bar
+            scrollbar_pay.destroy()
+            root.update()
+            scrollbar_pay = Scrollbar(paymentItems, command=canvas_pay.yview)
+            scrollbar_pay.pack(side=RIGHT, fill='y', expand=False)
+            canvas_pay.configure(yscrollcommand = scrollbar_pay.set)
+            canvas_pay.bind('<Configure>', on_configure_pay)
     except:
         pass
 
