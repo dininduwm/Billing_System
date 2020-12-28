@@ -5,10 +5,15 @@ from fetchData import *
 from createBill import createBill
 from datetime import date, datetime
 
+# list of constants
+halfDayExcep = {'M0001'}
+
 # variables to handle the preocess
 isItemLoaded = False
 itemData = None
 billNo = '0022'
+rentList = []
+listItems = []
 listItems_pay = []
 paymentList = []
 rentListChanges = []
@@ -148,6 +153,43 @@ def printBillButton():
         billNo = "%04d"%(int(billNo)+1)
         print(billNo)
 
+# resetting the form
+def resetButton(): 
+    global isItemLoaded,itemData,paymentList,rentListChanges,rentListNew,payment,dataToPrint,amountToBePaid,rentList
+    isItemLoaded = False
+    itemData = None
+    rentList = []
+    paymentList = []
+    rentListChanges = []
+    rentListNew = []
+    payment = None
+    dataToPrint = {
+        'bill_no': '',
+        'id': '',
+        'name': '',
+        'tp': '',
+        'date': '',
+        'payment': 0,
+        'amountToBe': 0,
+        'RentedItems': [],
+        'ItemTotal': 0,
+    }
+    amountToBePaid = 0
+
+    # clearing the entries
+    nicEntry.delete(0, 'end')
+    nameEntry.delete(0, 'end')
+    tpEntry.delete(0, 'end')
+    itemCodeEntry.delete(0, 'end')
+    itemRentQtyEntry.delete(0, 'end')
+    itemRateLabel.configure(text='Item Rate                 ---> ')
+    itemQtyLabel.configure(text='Item Available Qty  ---> ')
+    itemDescLabel.configure(text='Item Description     ---> ')
+    payButton.config(state='active')
+
+    updatePayTable()
+    updateRentTable()
+
 def calculateCost():
     # date format
     format = "%Y-%m-%d %H:%M:%S"
@@ -160,7 +202,7 @@ def calculateCost():
             returnedDate = datetime.now()
         rentedDate = datetime.strptime(item[2], format)
         hours = (returnedDate-rentedDate).total_seconds()/(3600)
-        if (hours <= 6):
+        if (hours <= 6 and (item[0] not in halfDayExcep)):
             days = 0.5
         else:
             days = hours//24
@@ -280,6 +322,8 @@ addButton = Button(customerDetail, text="Add Customer", width=20, command=create
 addButton.grid(row=1, column=2, padx=5)
 tpEntry = Entry(customerDetail, width=40)
 tpEntry.grid(row=2, column=1, sticky=W, pady=5)
+resetButton = Button(customerDetail, text="Reset", width=20, command=resetButton)
+resetButton.grid(row=2, column=2, padx=5)
 
 # frame for the item details
 itemDetail = Frame(root, highlightbackground="black", highlightthickness=1)
@@ -356,6 +400,7 @@ def updateRentTable():
     listItems = []
 
     # sorting the list
+    print(rentList)
     rentList = sorted(rentList, key=lambda item: (~item[-1], item[2]), reverse=True)
 
 
