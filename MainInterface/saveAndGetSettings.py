@@ -1,9 +1,5 @@
 import json
 
-data = {
-    'billNo': '0005'
-}
-
 # save data to the conf file
 def saveConf(data):
     with open('settings/conf.json', 'w') as file:
@@ -14,6 +10,3 @@ def loadConf():
     with open('settings/conf.json', 'r') as file:
         return(json.loads(file.read()))
 
-
-saveConf(data)
-print(loadConf())

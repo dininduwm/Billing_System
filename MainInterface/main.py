@@ -5,9 +5,11 @@ from fetchData import *
 from createBill import createBill
 from datetime import date, datetime
 from saveAndGetSettings import *
+import math
 
 # list of constants
 halfDayExcep = {'M0001'}
+discountList = {'M0002'}
 
 # variables to handle the preocess
 isItemLoaded = False
@@ -222,6 +224,17 @@ def calculateCost():
             if hours%24 > 2:
                 days += 1
             days = max(1, days)
+        #discount procedure
+        if item[0] in discountList:
+            if days >= 40:
+                item[5] = math.floor(float(item[5])*0.5)
+            elif days >= 30:
+                item[5] = math.floor(float(item[5])*0.7)
+            elif days >= 14:
+                item[5] = math.floor(float(item[5])*0.8)
+            elif days >= 7:
+                item[5] = math.floor(float(item[5])*0.9)
+                
         # calculating the cost
         item[6] = str(days)
         item[7] = '{:0,.2f}'.format(float(item[4])*float(item[5])*days)

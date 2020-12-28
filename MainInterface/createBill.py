@@ -104,7 +104,7 @@ def createBill(data, bill_no):
         make_rows_bold(table.rows[0])
     
 
-    document.save('{}.docx'.format(bill_no))
+    document.save('docs/{}.docx'.format(bill_no))
 
 
 data = {
