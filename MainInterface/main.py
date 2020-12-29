@@ -9,8 +9,8 @@ import math
 import contextlib
 
 # list of constants
-halfDayExcep = {'M0001'}
-discountList = {'M0002'}
+halfDayExcep = {'M0030'}
+discountList = {'M0001','M0002','M0003','M0004','M0005','M0006','M0007','M0008','M0033','M0034','M0035','M0036','M0037','M0038','M0039'}
 
 # variables to handle the preocess
 isItemLoaded = False
