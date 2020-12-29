@@ -256,7 +256,8 @@ def calculateCost():
         # calculating the cost
         item[6] = str(days)
         item[7] = '{:0,.2f}'.format(float(item[4])*float(item[5])*days)
-    isDiscount = False
+    if len(rentList) > 0:
+        isDiscount = False
 
 # calculate tehe ammount to be recieved
 def calculateAmmountRec():
