@@ -18,6 +18,10 @@ def createBill(data, bill_no):
         state = True
 
     document = Document()
+
+    p = document.add_paragraph()
+    p.add_run('\n\n\n\n\n\n\n\n\n')
+
     document.add_heading('Bill No: {}'.format(data['bill_no']))
 
     # sorting the rented item list
@@ -91,15 +95,15 @@ def createBill(data, bill_no):
         table.rows[1].cells[1].text = 'Rs. {:10,.2f}'.format(data['ItemTotal'])
         table.rows[2].cells[0].text = 'මුළු මුදල'
         table.rows[2].cells[1].text = '            Rs. {:10,.2f}'.format(data['payment']+data['amountToBe'])
-        table.rows[3].cells[0].text = 'ගෙවීම්'
+        table.rows[3].cells[0].text = 'අද දින ගෙවන ලද මුදල'
         table.rows[3].cells[1].text = '-(Rs. {:10,.2f})'.format(data['payment'])
-        table.rows[4].cells[0].text = 'ගෙවිය යුතු වටිනාකම'
+        table.rows[4].cells[0].text = 'හිඟ මුදල'
         table.rows[4].cells[1].text = '            Rs. {:10,.2f}'.format(data['amountToBe'])
         make_rows_bold(table.rows[0], table.rows[1], table.rows[2], table.rows[3], table.rows[4])
     else:
         table = document.add_table(rows=1, cols=2)
         table.style = 'Table Grid'  
-        table.rows[0].cells[0].text = 'ගෙවීම්'
+        table.rows[0].cells[0].text = 'අද දින ගෙවන ලද මුදල'
         table.rows[0].cells[1].text = 'Rs. {:10,.2f}'.format(data['payment'])
         make_rows_bold(table.rows[0])
     
@@ -124,4 +128,4 @@ data = {
     'ItemTotal': 10000,
 }
 
-#createBill(data, '0012')
+createBill(data, '0012')
