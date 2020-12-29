@@ -14,6 +14,7 @@ discountList = {'M0001','M0002','M0003','M0004','M0005','M0006','M0007','M0008',
 
 # variables to handle the preocess
 isItemLoaded = False
+isDiscount = True
 itemData = None
 billNo = '0001'
 rentList = []
@@ -57,6 +58,9 @@ def createCustomerButton():
     createCustomer(nic, name, tp)
 
 def searchCustomerButton():
+    nicTmp = nicEntry.get()
+    resetButtonCmd()
+    nicEntry.insert(0, nicTmp)
     global dataToPrint
 
     nic = nicEntry.get()
@@ -180,7 +184,8 @@ def printBillButton():
 
 # resetting the form
 def resetButtonCmd(): 
-    global isItemLoaded,itemData,paymentList,rentListChanges,rentListNew,payment,dataToPrint,amountToBePaid,rentList,availQtyChange
+    global isItemLoaded,itemData,paymentList,rentListChanges,rentListNew,payment,dataToPrint,amountToBePaid,rentList,availQtyChange,isDiscount
+    isDiscount = True
     isItemLoaded = False
     itemData = None
     rentList = []
@@ -218,6 +223,7 @@ def resetButtonCmd():
     updateRentTable()
 
 def calculateCost():
+    global isDiscount
     # date format
     format = "%Y-%m-%d %H:%M:%S"
 
@@ -237,7 +243,7 @@ def calculateCost():
                 days += 1
             days = max(1, days)
         #discount procedure
-        if item[0] in discountList:
+        if item[0] in discountList and isDiscount:
             if days >= 40:
                 item[5] = math.floor(float(item[5])*0.5)
             elif days >= 30:
@@ -250,6 +256,7 @@ def calculateCost():
         # calculating the cost
         item[6] = str(days)
         item[7] = '{:0,.2f}'.format(float(item[4])*float(item[5])*days)
+    isDiscount = False
 
 # calculate tehe ammount to be recieved
 def calculateAmmountRec():
@@ -323,7 +330,7 @@ def returnItem(index):
         # asking for the number of qty returened
         USER_INP = simpledialog.askinteger(title="Test",
                                     prompt="Number of items returened (Enter -1 if all the items returned)")
-        if (USER_INP == -1 or int(USER_INP) > rentList[index][4]):
+        if (USER_INP == -1 or int(USER_INP) >= rentList[index][4]):
             retQtyTmp = rentList[index][4]
         else:
             rentQtyTmp = USER_INP

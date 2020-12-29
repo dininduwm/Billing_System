@@ -128,4 +128,4 @@ data = {
     'ItemTotal': 10000,
 }
 
-createBill(data, '0012')
+#createBill(data, '0012')
