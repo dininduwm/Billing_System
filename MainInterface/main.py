@@ -55,7 +55,8 @@ def createCustomerButton():
     name = nameEntry.get()
     tp = tpEntry.get()
     # saving data
-    createCustomer(nic, name, tp)
+    if createCustomer(nic, name, tp):
+        searchCustomerButton()
 
 def searchCustomerButton():
     nicTmp = nicEntry.get()
@@ -160,27 +161,32 @@ def printBillButton():
     print('payment', payment)
     print('print data', dataToPrint)
 
-    # printin bill procedure    
-    dataToPrint['amountToBe'] = amountToBePaid
-    date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    dataToPrint['date'] = date
-    tot = 0
-    for item in dataToPrint['RentedItems']:
-        tot += float(item[5].replace(',',''))
-    dataToPrint['ItemTotal'] = tot
-    if payment:
-        dataToPrint['payment'] = float(payment[-1])
+    # check the make payment button
+    if (descEntry.get() == '') and (amountEntry.get() == ''):
+        # printin bill procedure    
+        dataToPrint['amountToBe'] = amountToBePaid
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        dataToPrint['date'] = date
+        tot = 0
+        for item in dataToPrint['RentedItems']:
+            tot += float(item[5].replace(',',''))
+        dataToPrint['ItemTotal'] = tot
+        if payment:
+            dataToPrint['payment'] = float(payment[-1])
 
-    # send bil to database
-    if (setBillData(rentListNew, rentListChanges, payment, date, billNo, nicEntry.get(), availQtyChange)):
-    #if True:
-        # creating the bill
-        createBill(dataToPrint, billNo)
-        billNo = "%04d"%(int(billNo)+1)
-        print(billNo)
-        saveConf({'billNo': billNo})
-        billNoLabel.configure(text="Bill No {}".format(billNo))
-        resetButtonCmd()
+        # send bil to database
+        if (setBillData(rentListNew, rentListChanges, payment, date, billNo, nicEntry.get(), availQtyChange)):
+        #if True:
+            # creating the bill
+            createBill(dataToPrint, billNo)
+            billNo = "%04d"%(int(billNo)+1)
+            print(billNo)
+            saveConf({'billNo': billNo})
+            billNoLabel.configure(text="Bill No {}".format(billNo))
+            resetButtonCmd()        
+    else:
+        messagebox.showerror(title="Rent Page", message="Press make payment button before proceed")
+        
 
 # resetting the form
 def resetButtonCmd(): 
@@ -214,6 +220,7 @@ def resetButtonCmd():
     itemCodeEntry.delete(0, 'end')
     itemRentQtyEntry.delete(0, 'end')
     descEntry.delete(0, 'end')
+    amountEntry.delete(00, 'end')
     itemRateLabel.configure(text='Item Rate                 ---> ')
     itemQtyLabel.configure(text='Item Available Qty  ---> ')
     itemDescLabel.configure(text='Item Description     ---> ')

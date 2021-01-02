@@ -14,10 +14,12 @@ def createCustomer(nic, name, tp):
             data = json.loads(req.text)
             if (data['response'] == 'Ok'):
                 messagebox.showinfo(title="Rent Page", message="Adding user successful")
+                return True
             else:
                 messagebox.showerror(title="Rent Page", message="Adding new user faild")
         else:
             messagebox.showerror(title="Rent Page", message="Network or server Error")
+    return False
 
 
 # taking a customer
