@@ -2,7 +2,7 @@ from tkinter import *
 from tkinter import simpledialog, messagebox
 from time import sleep
 from fetchData import *
-from createBill import createBill
+from createBill import createBillWrapper
 from datetime import date, datetime
 from saveAndGetSettings import *
 import math
@@ -178,7 +178,7 @@ def printBillButton():
         if (setBillData(rentListNew, rentListChanges, payment, date, billNo, nicEntry.get(), availQtyChange)):
         #if True:
             # creating the bill
-            createBill(dataToPrint, billNo)
+            createBillWrapper(dataToPrint, billNo)
             billNo = "%04d"%(int(billNo)+1)
             print(billNo)
             saveConf({'billNo': billNo})

@@ -9,14 +9,18 @@ def make_rows_bold(*rows):
                 for run in paragraph.runs:
                     run.font.bold = True
 
-# creating the bill for print
-def createBill(data, bill_no):
+def createBillWrapper(data, bill_no):
     # cheking the bill state
     if data['payment']+data['amountToBe']-data['ItemTotal'] == 0:
         state = False
+        createBill(data, bill_no, state, bill_no)
+        createBill(data, bill_no, True, bill_no + '-Full')
     else:
         state = True
+        createBill(data, bill_no, state, bill_no)
 
+# creating the bill for print
+def createBill(data, bill_no, state, print_name):
     document = Document()
 
     p = document.add_paragraph()
@@ -108,7 +112,7 @@ def createBill(data, bill_no):
         make_rows_bold(table.rows[0])
     
 
-    document.save('docs/{}.docx'.format(bill_no))
+    document.save('docs/{}.docx'.format(print_name))
 
 
 data = {
